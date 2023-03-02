@@ -1,0 +1,23 @@
+{
+  "name": "how-much-my-home",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build" : "tsc",
+    "prestart": "npm run build",
+    "start" : "node dist/index"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^19.7.2"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5",
+    "@types/node": "^18.14.4",
+    "rimraf" : "^4.1.3"
+  }
+}
