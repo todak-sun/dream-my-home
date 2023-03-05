@@ -1,6 +1,8 @@
+import axios from "axios";
+import chalk from "chalk";
 import { ComplexArticleParam, SingleMarkerV2Params } from "src/interfaces/request";
 import { RegionResponse, SingleMarkerV2Response } from "src/interfaces/response";
-import { ComplexResponse, ComplexOverview } from "../interfaces/response/index";
+import { ComplexArticleResponse, ComplexOverview, ComplexResponse } from "../interfaces/response/index";
 
 export function waitSecond(second: number) {
   return new Promise((res) => setTimeout(res, 1000 * second));
@@ -10,7 +12,7 @@ function paramSerializer2(params: Record<string, any>) {
   return Object.entries(params)
     .reduce((acc, [key, value]) => {
       if (Array.isArray(value)) {
-        acc.push(`${key}=${value.join(",")}`);
+        acc.push(`${key}=${value.join(":")}`);
       } else if (value === null || value === undefined) {
         acc.push(`${key}`);
       } else {
@@ -25,7 +27,7 @@ function paramSerializer(params: Record<string, any>) {
   return Object.entries(params)
     .reduce((acc, [key, value]) => {
       if (Array.isArray(value)) {
-        acc.push(`${encodeURIComponent(key)}=${value.map((v) => encodeURIComponent(v)).join(",")}`);
+        acc.push(`${encodeURIComponent(key)}=${encodeURIComponent(value.join(": "))}`);
       } else if (value === null || value === undefined) {
         acc.push(`${key}`);
       } else {
@@ -36,46 +38,67 @@ function paramSerializer(params: Record<string, any>) {
     .join("&");
 }
 
-function fetchRegionList(param: { cortarNo: string }) {
-  return fetch(`https://new.land.naver.com/api/regions/list?${paramSerializer(param)}`).then((res) =>
-    res.json()
-  ) as Promise<RegionResponse>;
-}
+const api = axios.create({
+  baseURL: `https://new.land.naver.com/api`,
+  paramsSerializer: {
+    serialize: paramSerializer,
+  },
+});
 
-function fetchComplexesByCortarNo(param: { cortarNo: string }) {
-  return fetch(
-    `https://new.land.naver.com/api/regions/complexes?${paramSerializer({
+api.interceptors.request.use((req) => {
+  const method = req.method?.toUpperCase() || "UNKNOWN";
+  const url = req.url;
+  const qs = paramSerializer2(req.params);
+  console.log(chalk.green(`[${method}] ${url}?${qs}`));
+  console.log(chalk.red(JSON.stringify(req.headers)));
+  return req;
+});
+
+async function fetchRegionList(param: { cortarNo: string }) {
+  const { data } = await api.get<RegionResponse>(`/regions/list`, {
+    params: {
       ...param,
-      realEstateType: "APT:ABYG:JGC",
+    },
+  });
+  return data;
+}
+
+async function fetchComplexesByCortarNo(param: { cortarNo: string }) {
+  const { data } = await api.get<ComplexResponse>(`/regions/complexes`, {
+    params: {
+      ...param,
+      realEstateType: "APT",
       order: null,
-    })}`
-  ).then((res) => res.json()) as Promise<ComplexResponse>;
+    },
+  });
+  return data;
 }
 
-function fetchComplexOverview(param: { complexNo: string }) {
-  console.log(
-    `https://new.land.naver.com/api/complexes/overview/${param.complexNo}?${paramSerializer2({
+async function fetchComplexOverview(param: { complexNo: string }) {
+  const { data } = await api.get<ComplexOverview>(`/complexes/overview/${param.complexNo}`, {
+    params: {
       complexNo: param.complexNo,
       isClickedMarker: true,
-    })}`
-  );
-  return fetch(
-    `https://new.land.naver.com/api/complexes/overview/${param.complexNo}?${paramSerializer({
-      complexNo: param.complexNo,
-      isClickedMarker: true,
-    })}`
-  ).then((res) => res.json()) as Promise<ComplexOverview>;
+    },
+  });
+  return data;
 }
 
-function fetchSingleMarkers(param: SingleMarkerV2Params) {
-  console.log(`https://new.land.naver.com/api/complexes/single-markers/2.0?${paramSerializer2(param)}`);
-  return fetch(`https://new.land.naver.com/api/complexes/single-markers/2.0?${paramSerializer(param)}`).then((res) =>
-    res.json()
-  ) as Promise<SingleMarkerV2Response[]>;
+async function fetchSingleMarkers(param: SingleMarkerV2Params) {
+  const { data } = await api.get<SingleMarkerV2Response[]>(`/complexes/single-markers/2.0`, {
+    params: {
+      ...param,
+    },
+  });
+  return data;
 }
 
-function fetchComplexArticles(param: ComplexArticleParam) {
-  return fetch(`https://new.land.naver.com/api/articles/complex/`)
+async function fetchComplexArticles(param: ComplexArticleParam, headers: Record<string, string>) {
+  const { data } = await api.get<ComplexArticleResponse>(`/articles/complex/${param.complexNo}`, {
+    params: { ...param },
+    headers: headers,
+  });
+  return data;
 }
 
 export const myContext = {
@@ -84,6 +107,7 @@ export const myContext = {
   fetchSingleMarkers,
   fetchComplexesByCortarNo,
   fetchComplexOverview,
+  fetchComplexArticles,
   generateKey: (param: { name: string; lon: number; lat: number }) => {
     const { name, lon, lat } = param;
     return `${name}|${lon}|${lat}`;

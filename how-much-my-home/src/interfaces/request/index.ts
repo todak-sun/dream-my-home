@@ -1,16 +1,23 @@
 export type NaverLandParams = {
   ms: [number, number, number];
-  a: "APT"; // 아파트.
-  b: "A1"; // 매매 유형
-  e: "RETAIL";
+  a: RealEstateType; // 아파트.
+  b: TradeType; // 매매 유형
+  e: PriceType;
   g: number; // 최대 가격
   h: number; // 최소 면적
   i: number; // 최대 면적
   j: 20; // 연식
-  l: 300; // 세대수
+  l: number; // 세대수 최소
+  m: number; // 세대수 최대
 };
 
 export type PriceType = "RETAIL" | "REAL";
+export type TradeType = "A1";
+
+export type RealEstateType = "APT" //아파트
+| "JGC" // 재건축
+| "ABYG" // 분양권
+;
 
 export type SingleMarkerV2Params = {
   cortarNo: string;
@@ -21,11 +28,11 @@ export type SingleMarkerV2Params = {
   selectedComplexNo: null;
   selectedComplexBuildingNo: null;
   fakeComplexMarker: null;
-  realEstateType: "APT";
-  tradeType: "A1";
+  realEstateType: RealEstateType[];
+  tradeType: TradeType;
   tag: "::::::::";
-  rentPriceMin: 0;
-  rentPriceMax: 900000000;
+  rentPriceMin: number;
+  rentPriceMax: number;
   priceMin: number;
   priceMax: number;
   areaMin: number;
@@ -45,9 +52,11 @@ export type SingleMarkerV2Params = {
   bottomLat: number;
 };
 
+
+
 export type ComplexArticleParam = {
-  realEstateType: "APT:ABYG:JGC";
-  tradeType: "A1";
+  realEstateType: RealEstateType[];
+  tradeType: TradeType;
   tag: "::::::::";
   rentPriceMin: number;
   rentPriceMax: number;
@@ -57,8 +66,8 @@ export type ComplexArticleParam = {
   areaMax: number;
   oldBuildYears: number | null;
   recentlyBuildYears: null;
-  minHouseHoldCount: null;
-  maxHouseHoldCount: null;
+  minHouseHoldCount: number | null;
+  maxHouseHoldCount: number | null;
   showArticle: boolean;
   sameAddressGroup: boolean;
   minMaintenanceCost: null;
@@ -66,9 +75,9 @@ export type ComplexArticleParam = {
   priceType: PriceType;
   directions: null;
   page: number;
-  complexNo: 22171;
-  buildingNos: null;
-  areaNos: "2:4:5:6:3";
+  complexNo: string;
+  buildingNos: string[];
+  areaNos: number[];
   type: "list";
-  order: "rank";
+  order: "rank" | "prc";
 };

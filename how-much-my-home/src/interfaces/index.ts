@@ -1,4 +1,4 @@
-import { SingleMarkerV2Response, ComplexOverview } from './response/index';
+import { SingleMarkerV2Response, ComplexOverview, ComplexArticle } from './response/index';
 export type MyComplexType = SingleMarkerV2Response & {
   complexNo: string;
   cortarNo: string;
@@ -6,4 +6,5 @@ export type MyComplexType = SingleMarkerV2Response & {
   detailAddress: string;
   useApproveYmd: string;
   overview: ComplexOverview | null;
+  articles: ComplexArticle[];
 };
